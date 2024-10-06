@@ -6,6 +6,14 @@ Rustの学習の一環として、外部APIにリクエストを送信し、レ�
 
 今回は Steam Web API を用いて、Steamのユーザー情報、フレンド情報、ゲーム情報などを取得し、それらのデータを表示するCLIアプリケーションを作成します。
 
+## 実行方法
+
+以下を実行する。
+
+```sh
+STEAM_API_KEY=${my_api_key} STEAM_USER_ID=${my_user_id} cargo run
+```
+
 ## Steam Web API
 
 https://steamcommunity.com/dev
