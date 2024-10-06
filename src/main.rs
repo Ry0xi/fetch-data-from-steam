@@ -99,20 +99,22 @@ fn get_config() -> Config {
         steam: SteamConfig {
             api_key: env::var("STEAM_API_KEY").expect("STEAM_API_KEY is not specified."),
             user_id: env::var("STEAM_USER_ID").expect("STEAM_USER_ID is not specified."),
-        }
+        },
     }
 }
 
 async fn get_player_summary(config: &SteamConfig) -> Result<GetPlayerSummaryResponse, Error> {
     let url = format!(
         "http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={}&steamids={}",
-        config.api_key,
-        config.user_id,
+        config.api_key, config.user_id,
     );
 
     println!("URL: {}", url);
 
-    reqwest::get(&url).await?.json::<GetPlayerSummaryResponse>().await
+    reqwest::get(&url)
+        .await?
+        .json::<GetPlayerSummaryResponse>()
+        .await
 }
 
 fn show_player_summary(player: &Player) {
@@ -121,18 +123,26 @@ fn show_player_summary(player: &Player) {
     println!("Profile: {}", player.profileurl);
     println!("Status: {}", player.personastate);
     println!("Visibility: {}", player.communityvisibilitystate);
-    println!("Last logged off at: {}", player.lastlogoff.map(
-        |last_log_off| {
-            let now = Utc::now();
-            let duration = now - last_log_off;
+    println!(
+        "Last logged off at: {}",
+        player
+            .lastlogoff
+            .map(|last_log_off| {
+                let now = Utc::now();
+                let duration = now - last_log_off;
 
-            // 日本時間に変換
-            let jst = FixedOffset::east_opt(9 * 3600).unwrap();
-            let last_log_off_jst = last_log_off.with_timezone(&jst);
+                // 日本時間に変換
+                let jst = FixedOffset::east_opt(9 * 3600).unwrap();
+                let last_log_off_jst = last_log_off.with_timezone(&jst);
 
-            format!("{}前 ( {} )", human_readable_duration(duration), last_log_off_jst.format("%Y年%m月%d日 %H:%M:%S"))
-        } 
-    ).unwrap_or(String::from("-")));
+                format!(
+                    "{}前 ( {} )",
+                    human_readable_duration(duration),
+                    last_log_off_jst.format("%Y年%m月%d日 %H:%M:%S")
+                )
+            })
+            .unwrap_or(String::from("-"))
+    );
 }
 
 fn human_readable_duration(duration: Duration) -> String {
