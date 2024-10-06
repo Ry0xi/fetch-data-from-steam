@@ -1,6 +1,7 @@
 use std::env;
 
 use chrono::{DateTime, Duration, FixedOffset, Utc};
+use log::debug;
 use reqwest::Error;
 use serde::Deserialize;
 use serde_repr::Deserialize_repr;
@@ -84,9 +85,10 @@ impl std::fmt::Display for CommunityVisibilityState {
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    // Loggerの初期化
+    env_logger::init();
+
     let config = get_config();
-    println!("API KEY: {}", config.steam.api_key);
-    println!("USER ID: {}", config.steam.user_id);
 
     let response: GetPlayerSummaryResponse = get_player_summary(&config.steam).await?;
     show_player_summary(&response.response.players[0]);
@@ -95,12 +97,17 @@ async fn main() -> Result<(), Error> {
 }
 
 fn get_config() -> Config {
-    Config {
+    let config = Config {
         steam: SteamConfig {
             api_key: env::var("STEAM_API_KEY").expect("STEAM_API_KEY is not specified."),
             user_id: env::var("STEAM_USER_ID").expect("STEAM_USER_ID is not specified."),
         },
-    }
+    };
+
+    debug!("API KEY: {}", config.steam.api_key);
+    debug!("USER ID: {}", config.steam.user_id);
+
+    config
 }
 
 async fn get_player_summary(config: &SteamConfig) -> Result<GetPlayerSummaryResponse, Error> {
@@ -109,7 +116,7 @@ async fn get_player_summary(config: &SteamConfig) -> Result<GetPlayerSummaryResp
         config.api_key, config.user_id,
     );
 
-    println!("URL: {}", url);
+    debug!("GET Player Summary URL: {}", url);
 
     reqwest::get(&url)
         .await?
