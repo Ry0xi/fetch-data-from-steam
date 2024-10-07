@@ -1,46 +1,12 @@
 mod config;
+mod steam_api;
 
-use chrono::{DateTime, Duration, FixedOffset, Utc};
-use config::{get_config, SteamConfig};
-use log::debug;
+use chrono::{Duration, FixedOffset, Utc};
+use config::get_config;
 use reqwest::Error;
-use serde::Deserialize;
-use serde_repr::Deserialize_repr;
-
-#[derive(Deserialize)]
-struct GetPlayerSummaryResponse {
-    response: GetPlayerSummaryResponseInner,
-}
-
-#[derive(Deserialize)]
-struct GetPlayerSummaryResponseInner {
-    players: Vec<Player>,
-}
-
-#[derive(Deserialize)]
-struct Player {
-    steamid: String,
-    personaname: String,
-    profileurl: String,
-    personastate: PersonState,
-    communityvisibilitystate: CommunityVisibilityState,
-    #[serde(with = "chrono::serde::ts_seconds_option")]
-    lastlogoff: Option<DateTime<Utc>>,
-}
-
-#[derive(Deserialize_repr)]
-#[repr(u8)]
-enum PersonState {
-    Offline = 0,
-    Online = 1,
-    Busy = 2,
-    Away = 3,
-    Snooze = 4,
-    LookingToTrade = 5,
-    LookingToPlay = 6,
-    #[serde(other)]
-    Unknown,
-}
+use steam_api::{
+    get_player_summary, CommunityVisibilityState, GetPlayerSummaryResponse, PersonState, Player,
+};
 
 impl std::fmt::Display for PersonState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -56,13 +22,6 @@ impl std::fmt::Display for PersonState {
         };
         write!(f, "{}", state_str)
     }
-}
-
-#[derive(Deserialize_repr)]
-#[repr(u8)]
-enum CommunityVisibilityState {
-    NotVisible = 1,
-    Visible = 3,
 }
 
 impl std::fmt::Display for CommunityVisibilityState {
@@ -86,20 +45,6 @@ async fn main() -> Result<(), Error> {
     show_player_summary(&response.response.players[0]);
 
     Ok(())
-}
-
-async fn get_player_summary(config: &SteamConfig) -> Result<GetPlayerSummaryResponse, Error> {
-    let url = format!(
-        "http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={}&steamids={}",
-        config.api_key, config.user_id,
-    );
-
-    debug!("GET Player Summary URL: {}", url);
-
-    reqwest::get(&url)
-        .await?
-        .json::<GetPlayerSummaryResponse>()
-        .await
 }
 
 fn show_player_summary(player: &Player) {
