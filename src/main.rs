@@ -1,19 +1,11 @@
-use std::env;
+mod config;
 
 use chrono::{DateTime, Duration, FixedOffset, Utc};
+use config::{get_config, SteamConfig};
 use log::debug;
 use reqwest::Error;
 use serde::Deserialize;
 use serde_repr::Deserialize_repr;
-
-struct Config {
-    steam: SteamConfig,
-}
-
-struct SteamConfig {
-    api_key: String,
-    user_id: String,
-}
 
 #[derive(Deserialize)]
 struct GetPlayerSummaryResponse {
@@ -94,20 +86,6 @@ async fn main() -> Result<(), Error> {
     show_player_summary(&response.response.players[0]);
 
     Ok(())
-}
-
-fn get_config() -> Config {
-    let config = Config {
-        steam: SteamConfig {
-            api_key: env::var("STEAM_API_KEY").expect("STEAM_API_KEY is not specified."),
-            user_id: env::var("STEAM_USER_ID").expect("STEAM_USER_ID is not specified."),
-        },
-    };
-
-    debug!("API KEY: {}", config.steam.api_key);
-    debug!("USER ID: {}", config.steam.user_id);
-
-    config
 }
 
 async fn get_player_summary(config: &SteamConfig) -> Result<GetPlayerSummaryResponse, Error> {
