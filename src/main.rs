@@ -174,3 +174,15 @@ fn human_readable_duration(duration: Duration) -> String {
         format!("{}年", secs / (86400 * 365))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_human_readable_duration() {
+        let duration = Duration::new(1, 0).unwrap();
+        let result = human_readable_duration(duration);
+        assert_eq!(result, "1秒");
+    }
+}
